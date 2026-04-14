@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "safe-migrations-mcp"
+version = "0.1.0"
+description = "MCP server that stops AI agents from breaking DB schemas and config files. Diff, risk-flag, and require explicit confirmation before any write."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Gavin May" }]
+keywords = ["mcp", "claude", "cursor", "migrations", "database", "config", "safety"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "mcp>=1.2.0",
+    "pyyaml>=6.0",
+    "tomli>=2.0; python_version<'3.11'",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+mysql    = ["PyMySQL>=1.1"]
+all      = ["psycopg[binary]>=3.1", "PyMySQL>=1.1"]
+
+[project.scripts]
+safe-migrations-mcp = "safe_migrations_mcp.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/possibly6/safe-migration-mcp"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/safe_migrations_mcp"]

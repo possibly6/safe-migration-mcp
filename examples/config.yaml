@@ -1,0 +1,12 @@
+app:
+  name: openclaw-demo
+  port: 3000
+  log_level: info
+
+database:
+  url: sqlite:///./demo.db
+  pool_size: 5
+
+features:
+  signups_enabled: true
+  beta_mode: false
