@@ -40,7 +40,7 @@ Born from watching an OpenClaw agent break its own config file trying to make a 
 ## Install & run
 
 ```bash
-pip install git+https://github.com/possibly6/safe-migrations-mcp
+pip install safe-migrations-mcp          # or: pipx install safe-migrations-mcp
 safe-migrations-mcp                      # speaks MCP over stdio
 ```
 
@@ -55,9 +55,9 @@ safe-migrations-mcp
 
 Optional extras (Postgres / MySQL drivers):
 
-- `pip install 'git+https://github.com/possibly6/safe-migrations-mcp#egg=safe-migrations-mcp[postgres]'` — adds `psycopg`
-- `pip install 'git+https://github.com/possibly6/safe-migrations-mcp#egg=safe-migrations-mcp[mysql]'`    — adds `PyMySQL`
-- `pip install 'git+https://github.com/possibly6/safe-migrations-mcp#egg=safe-migrations-mcp[all]'`      — both
+- `pip install 'safe-migrations-mcp[postgres]'` — adds `psycopg`
+- `pip install 'safe-migrations-mcp[mysql]'`    — adds `PyMySQL`
+- `pip install 'safe-migrations-mcp[all]'`      — both
 
 SQLite, YAML, JSON, `.env`, and Prisma/Drizzle schema-file parsing work with
 zero extra deps.
