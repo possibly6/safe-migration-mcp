@@ -1,39 +1,31 @@
 # Safe Migrations MCP
 
-**The safety layer the agent ecosystem needs.**
+**Your AI coding agent can silently destroy your production database.**
 
-Stops Claude Code, Cursor, OpenClaw, and other AI coding agents from quietly breaking your database schema or config files.
+A misplaced `DROP COLUMN`, a missing `WHERE`, a one-character `.env` typo — Claude Code, Cursor, OpenClaw, and every other coding agent will cheerfully execute the change and report success while your data quietly vanishes.
 
-Every proposed change is diffed, risk-flagged, and requires a fresh simulation-issued confirmation token before a single byte is written.
+**Safe Migrations MCP is the gate they have to pass through first.** Every proposed schema change or config edit is diffed, risk-flagged, snapshotted, and requires a one-time confirmation token from a fresh `simulate_impact` call before a single byte is written.
 
-An MCP server that gives AI coding agents a safe, auditable, human-in-the-loop way to propose and execute DB schema changes **and** everyday config edits — the exact class of change that silently corrupts production when an agent gets overconfident.
+Works with any MCP-capable agent. Local-first. Zero cloud dependency. Born from watching an OpenClaw agent break its own config file trying to make a "small" change — the fix is universal.
 
 ---
 
-## Why this exists
+## How it works
 
-Agents are great at *proposing* changes and terrible at *understanding the
-blast radius* of those changes. A one-word YAML typo, a helpful `DROP COLUMN`,
-a missing `WHERE` in an `UPDATE` — any of these can take a project down while
-the agent cheerfully reports success.
+The mandatory checkpoint between the agent and your disk:
 
-Safe Migrations MCP puts a mandatory checkpoint between the agent and your
-disk:
-
-1. **Propose** — agent sends an intent (natural language or raw SQL, or a
-   new config file); server returns a `proposal_id` plus a redacted preview
-   and SHA-256 hash of the SQL/edit and its rollback. Full payload is stored
+1. **Propose** — agent sends an intent (natural language, raw SQL, or a new
+   config file); server returns a `proposal_id` plus a redacted preview and
+   SHA-256 hash of the SQL/edit and its rollback. Full payload is stored
    server-side, never echoed back.
 2. **Simulate** — dry-run inside a rolled-back transaction; count affected
    rows; surface every DROP, TRUNCATE, NOT-NULL-without-default, secret-key
    removal, etc. On success, returns a one-time `confirmation_token` bound
    to the proposal's fingerprint.
-3. **Apply** — only runs with that fresh `confirmation_token`. Snapshots
-   the file or DB first. Logs everything to an append-only audit trail.
+3. **Apply** — only runs with that fresh `confirmation_token`. Snapshots the
+   file or DB first. Logs everything to an append-only audit trail.
 
-Local-first. Zero cloud dependency. ~2k LOC of Python, hardened against the usual footguns (symlink writes, silent SQLite creation, MySQL DDL auto-commit, token replay, secret leakage in diffs).
-
-Born from watching an OpenClaw agent break its own config file trying to make a "small" change. The fix is universal: any agent that can edit anything should have to slow down, show its work, and ask first.
+~2k LOC of Python, hardened against the usual footguns (symlink writes, silent SQLite creation, MySQL DDL auto-commit, token replay, secret leakage in diffs).
 
 ---
 
