@@ -1,15 +1,12 @@
 # Safe Migrations MCP
 
-> **The safety layer the agent ecosystem needs.**
-> Stops Claude Code, Cursor, OpenClaw, and other AI coding agents from quietly
-> breaking your database schema or config files. Every proposed change is
-> diffed, risk-flagged, and requires a fresh simulation-issued confirmation token before a single
-> byte is written.
+**The safety layer the agent ecosystem needs.**
 
-An MCP server that gives AI coding agents a safe, auditable, human-in-the-loop
-way to propose and execute DB schema changes **and** everyday config edits —
-the exact class of change that silently corrupts production when an agent
-gets overconfident.
+Stops Claude Code, Cursor, OpenClaw, and other AI coding agents from quietly breaking your database schema or config files.
+
+Every proposed change is diffed, risk-flagged, and requires a fresh simulation-issued confirmation token before a single byte is written.
+
+An MCP server that gives AI coding agents a safe, auditable, human-in-the-loop way to propose and execute DB schema changes **and** everyday config edits — the exact class of change that silently corrupts production when an agent gets overconfident.
 
 ---
 
@@ -33,6 +30,8 @@ disk:
    file or DB first. Logs everything to an append-only audit trail.
 
 Local-first. Zero cloud dependency. ~2k LOC of Python, hardened against the usual footguns (symlink writes, silent SQLite creation, MySQL DDL auto-commit, token replay, secret leakage in diffs).
+
+Born from watching an OpenClaw agent break its own config file trying to make a "small" change. The fix is universal: any agent that can edit anything should have to slow down, show its work, and ask first.
 
 ---
 
@@ -227,17 +226,51 @@ Override with `SAFE_MIGRATIONS_HOME=/path`.
 
 ---
 
-## Scope & non-goals
+## When to use this
 
-**In scope:** SQLite, Postgres, MySQL inspection / DML; YAML, JSON, `.env`, Prisma, Drizzle
-(best-effort). Natural-language intents for common DDL (add/drop/rename
-column, create index, drop table). Raw SQL pass-through with automatic
-best-effort rollback.
+✅ **Use Safe Migrations MCP when:**
+- You let an AI agent touch your database or config files
+- You want every schema change diffed and confirmed before it runs
+- You want an audit trail of every change an agent has ever made
+- You want rollback SQL generated automatically
+- You're tired of agents silently dropping columns or rewriting `.env` files
 
-**Out of scope (on purpose):** MySQL DDL apply support, full SQL dialect coverage, online schema
-migrations, zero-downtime pg backfills, arbitrary DSL translation. Safety
-and clarity beat breadth here — if a proposal is outside what we can
-analyze, we say so instead of guessing.
+❌ **Use a real migration framework (Alembic / Prisma Migrate / Flyway) when:**
+- You need versioned, repeatable migrations checked into source control
+- You're running zero-downtime migrations on a production Postgres
+- You need MySQL DDL apply support (this server intentionally blocks it — see FAQ)
+- You want online schema changes / backfills / dual-writes
+
+This is a **gatekeeper**, not a migration framework. They're complementary — author your migrations with Alembic, let agents propose runtime tweaks through this.
+
+**In scope:** SQLite, Postgres, MySQL inspection / DML; YAML, JSON, `.env`, Prisma, Drizzle (best-effort). Natural-language intents for common DDL (add/drop/rename column, create index, drop table). Raw SQL pass-through with automatic best-effort rollback.
+
+**Out of scope (on purpose):** MySQL DDL apply, full SQL dialect coverage, online schema migrations, arbitrary DSL translation. Safety and clarity beat breadth here — if a proposal is outside what we can analyze, we say so instead of guessing.
+
+---
+
+## FAQ
+
+**Q: How is this different from Alembic, Prisma Migrate, or Flyway?**
+A: Those are migration *frameworks* — they track, version, and apply schema changes you author by hand. This is a *gatekeeper* — it sits between an AI agent and your DB/configs and forces every change through diff → simulate → confirm → apply. Use both.
+
+**Q: Can the agent bypass the confirmation token?**
+A: Not from inside this server. The token is generated server-side, bound to a SHA-256 fingerprint of the proposal, and expires in 15 minutes. Editing the proposal invalidates the token. The agent must call `simulate_impact` to get a fresh one — and the client UI (Claude Code's prompt, Cursor's confirm dialog) is what makes a human actually read the proposal before that token gets passed back.
+
+**Q: Does this work in CI?**
+A: It's the wrong tool for CI. The whole point is a human checkpoint. In CI, use your normal migration framework with version-controlled SQL. Reach for this server when an *agent* (Claude Code, Cursor, OpenClaw) is the one proposing the edit.
+
+**Q: What happens if the apply fails halfway through?**
+A: SQLite changes run inside a transaction and roll back on error. Postgres applies via `psycopg` with explicit commit/rollback. Failed applies are marked `apply_failed`, *not* `applied`, and audited as a separate event so you can find them later.
+
+**Q: Why is MySQL DDL apply intentionally blocked?**
+A: MySQL auto-commits DDL — there's no real "dry-run inside a transaction" or rollback. This server refuses to pretend it has a safety net it doesn't have. MySQL DML (INSERT/UPDATE/DELETE) and inspection still work fine.
+
+**Q: Does it know about my Postgres triggers, views, or functions?**
+A: Not in v0.1 — inspection covers tables and columns. Triggers/views/functions are out of scope for now.
+
+**Q: My agent has a raw `write_file` tool too. Can't it just bypass the MCP?**
+A: Yes — the safety is opt-in at the agent's tool level. If you wire `safe-migrations` in *and* leave a raw filesystem write tool enabled for the same paths, the agent can route around the gate. The intended pattern is: route DB and config edits through this server, and keep raw filesystem writes scoped to other paths.
 
 ---
 
