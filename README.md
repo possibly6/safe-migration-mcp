@@ -38,24 +38,24 @@ Born from watching an OpenClaw agent break its own config file trying to make a 
 ## Install & run
 
 ```bash
-pip install git+https://github.com/possibly6/safe-migration-mcp
+pip install git+https://github.com/possibly6/safe-migrations-mcp
 safe-migrations-mcp                      # speaks MCP over stdio
 ```
 
 Or from a local clone:
 
 ```bash
-git clone https://github.com/possibly6/safe-migration-mcp
-cd safe-migration-mcp
+git clone https://github.com/possibly6/safe-migrations-mcp
+cd safe-migrations-mcp
 pip install -e '.[all]'
 safe-migrations-mcp
 ```
 
 Optional extras (Postgres / MySQL drivers):
 
-- `pip install 'git+https://github.com/possibly6/safe-migration-mcp#egg=safe-migrations-mcp[postgres]'` — adds `psycopg`
-- `pip install 'git+https://github.com/possibly6/safe-migration-mcp#egg=safe-migrations-mcp[mysql]'`    — adds `PyMySQL`
-- `pip install 'git+https://github.com/possibly6/safe-migration-mcp#egg=safe-migrations-mcp[all]'`      — both
+- `pip install 'git+https://github.com/possibly6/safe-migrations-mcp#egg=safe-migrations-mcp[postgres]'` — adds `psycopg`
+- `pip install 'git+https://github.com/possibly6/safe-migrations-mcp#egg=safe-migrations-mcp[mysql]'`    — adds `PyMySQL`
+- `pip install 'git+https://github.com/possibly6/safe-migrations-mcp#egg=safe-migrations-mcp[all]'`      — both
 
 SQLite, YAML, JSON, `.env`, and Prisma/Drizzle schema-file parsing work with
 zero extra deps.
@@ -177,8 +177,8 @@ summarize the last 10 entries.
 ## Try the demo locally
 
 ```bash
-git clone https://github.com/possibly6/safe-migration-mcp
-cd safe-migration-mcp
+git clone https://github.com/possibly6/safe-migrations-mcp
+cd safe-migrations-mcp
 pip install -e .
 python examples/seed_demo.py            # creates examples/demo.db
 safe-migrations-mcp                     # start the server
